@@ -1,22 +1,27 @@
 import { Injectable } from '@angular/core';
-import { UserManager, User } from 'oidc-client';
-import { Constants } from '../constants';
-import { Subject } from 'rxjs';
-import { CoreModule } from './core.module';
 import { HttpClient } from '@angular/common/http';
+
+import { UserManager, User, UserManagerSettings } from 'oidc-client';
+import { Subject } from 'rxjs';
+
+import { Constants } from '../constants';
 import { AuthContext } from '../model/auth-context';
+
 
 @Injectable()
 export class AuthService {
-  private _userManager: UserManager;
-  private _user: User;
-  private _loginChangedSubject = new Subject<boolean>();
+  // instances of utils imported by oidc-client
+  private userManager: UserManager;
+  private user: User;
 
-  loginChanged = this._loginChangedSubject.asObservable();
+  private loginChangedSubject = new Subject<boolean>();
+
+  loginChanged = this.loginChangedSubject.asObservable();
   authContext: AuthContext;
 
   constructor(private _httpClient: HttpClient) {
-    const stsSettings = {
+    // settings to configure the user manager
+    const stsSettings: UserManagerSettings = {
       authority: Constants.stsAuthority,
       client_id: Constants.clientId,
       redirect_uri: `${Constants.clientRoot}signin-callback`,
@@ -34,58 +39,57 @@ export class AuthService {
       //   end_session_endpoint: `${Constants.stsAuthority}v2/logout?client_id=${Constants.clientId}&returnTo=${encodeURI(Constants.clientRoot)}signout-callback`
       // }
     };
-    this._userManager = new UserManager(stsSettings);
-    this._userManager.events.addAccessTokenExpired(_ => {
-      this._loginChangedSubject.next(false);
+    this.userManager = new UserManager(stsSettings);
+    this.userManager.events.addAccessTokenExpired(_ => {
+      this.loginChangedSubject.next(false);
     });
-    this._userManager.events.addUserLoaded(user => {
-      if (this._user !== user) {
-        this._user = user;
+    this.userManager.events.addUserLoaded(user => {
+      if (this.user !== user) {
+        this.user = user;
         this.loadSecurityContext();
-        this._loginChangedSubject.next(!!user && !user.expired);
+        this.loginChangedSubject.next(!!user && !user.expired);
       }
     });
-
   }
 
   login() {
-    return this._userManager.signinRedirect();
+    return this.userManager.signinRedirect();
   }
 
   isLoggedIn(): Promise<boolean> {
-    return this._userManager.getUser().then(user => {
+    return this.userManager.getUser().then(user => {
       const userCurrent = !!user && !user.expired;
-      if (this._user !== user) {
-        this._loginChangedSubject.next(userCurrent);
+      if (this.user !== user) {
+        this.loginChangedSubject.next(userCurrent);
       }
       if (userCurrent && !this.authContext) {
         this.loadSecurityContext();
       }
-      this._user = user;
+      this.user = user;
       return userCurrent;
     });
   }
 
   completeLogin() {
-    return this._userManager.signinRedirectCallback().then(user => {
-      this._user = user;
-      this._loginChangedSubject.next(!!user && !user.expired);
+    return this.userManager.signinRedirectCallback().then(user => {
+      this.user = user;
+      this.loginChangedSubject.next(!!user && !user.expired);
       return user;
     });
   }
 
   logout() {
-    this._userManager.signoutRedirect();
+    this.userManager.signoutRedirect();
   }
 
   completeLogout() {
-    this._user = null;
-    this._loginChangedSubject.next(false);
-    return this._userManager.signoutRedirectCallback();
+    this.user = null;
+    this.loginChangedSubject.next(false);
+    return this.userManager.signoutRedirectCallback();
   }
 
   getAccessToken() {
-    return this._userManager.getUser().then(user => {
+    return this.userManager.getUser().then(user => {
       if (!!user && !user.expired) {
         return user.access_token;
       }

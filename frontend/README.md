@@ -1,5 +1,15 @@
 # SecuringAngularClient
 
+
+#### STS server users and pass
+admin@globomantics.com
+alice@globomantics.com
+bob@globomantics.com
+mary@globomantics.com
+
+ps: Test123!!!
+
+
 This project was generated with [Angular CLI](https://github.com/angular/angular-cli) version 8.1.2.
 
 ## Development server
