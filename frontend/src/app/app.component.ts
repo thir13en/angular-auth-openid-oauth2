@@ -9,27 +9,27 @@ import { AuthService } from './core/auth-service.component';
 export class AppComponent implements OnInit {
   isLoggedIn = false;
 
-  constructor(private _authService: AuthService) {
-    this._authService.loginChanged.subscribe(loggedIn => {
-      this.isLoggedIn = loggedIn;
-    })
-  }
+  constructor(private authService: AuthService) {}
 
   ngOnInit() {
-    this._authService.isLoggedIn().then(loggedIn => {
+    this.authService.loginChanged.subscribe(loggedIn => {
+      this.isLoggedIn = loggedIn;
+    })
+
+    this.authService.isLoggedIn().then(loggedIn => {
       this.isLoggedIn = loggedIn;
     })
   }
 
   login() {
-    this._authService.login();
+    this.authService.login();
   }
 
   logout() {
-    this._authService.logout();
+    this.authService.logout();
   }
 
   isAdmin() {
-    return this._authService.authContext && this._authService.authContext.isAdmin;
+    return this.authService.authContext && this.authService.authContext.isAdmin;
   }
 }

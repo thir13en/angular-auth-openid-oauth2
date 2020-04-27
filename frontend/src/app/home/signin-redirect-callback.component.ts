@@ -4,16 +4,21 @@ import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-signin-callback',
+  // this callback happens so quickly that we don't want to show anything here
   template: `<div></div>`
 })
 
 export class SigninRedirectCallbackComponent implements OnInit {
-  constructor(private _authService: AuthService,
-              private _router: Router) { }
+
+  constructor(
+      private authService: AuthService,
+      private router: Router
+  ) { }
 
   ngOnInit() {
-    this._authService.completeLogin().then(user => {
-      this._router.navigate(['/'], { replaceUrl: true });
+    this.authService.completeLogin().then(user => {
+      // when login complete, go back to home
+      this.router.navigate(['/'], { replaceUrl: true });
     })
   }
 }
